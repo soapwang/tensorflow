@@ -16,7 +16,7 @@ def get_weight_variable(shape, regularizer):
 	if regularizer !=None:
 		tf.add_to_collection('losses', regularizer(weights))
 	
-	return weights'
+	return weights
 	
 def inference(input_tensor, regularizer):
 	#use same variable names in different scope
