@@ -9,7 +9,7 @@ BATCH_SIZE = 100
 LEARNING_RATE = 0.8
 LEARNING_RATE_DECAY = 0.99
 REGULARIZATION_RATE = 0.0001
-TRAINING_STEPS = 10000
+TRAINING_STEPS = 10001
 MOVING_AVERAGE_DECAY = 0.99
 
 MODEL_SAVE_PATH = "./model/"
@@ -51,7 +51,7 @@ def train(mnist):
 			batch_xs, batch_ys = mnist.train.next_batch(BATCH_SIZE)
 			_, loss_value, step = sess.run([train_op, loss, global_step], feed_dict={x: batch_xs, y_: batch_ys})
 			
-			if i % 1000 ==0:
+			if i % 2000 ==0:
 				print("After %d training steps, loss on training batch is %g." % (i, loss_value))
 				saver.save(sess, MODEL_SAVE_PATH+MODEL_NAME, global_step = global_step)
 def main(argv=None):

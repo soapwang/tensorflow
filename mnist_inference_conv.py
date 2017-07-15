@@ -16,7 +16,7 @@ CONV2_SIZE = 5
 
 FC_SIZE = 1024
 
-def get_weight_variable(shape, regularizer):
+def get_weight_variable(shape, regularizer=None):
 	#for now, tf.get_variable() = tf.Variable()
 	weights = tf.get_variable(
 		"weights", shape,
@@ -73,18 +73,23 @@ def inference(input_tensor, train, regularizer):
 	
 	with tf.variable_scope('layer5-fc1'):
 		#fc1_weights = tf.get_weight_variable
-		fc1_weights = weight_variable([7 * 7 * 64, 1024])
-		fc1_biases = bias_variable([1024])
+		fc1_weights = get_weight_variable([7 * 7 * 64, 1024])
+		fc1_biases = tf.get_variable(
+			"biases", [1024],
+			initializer = tf.constant_initializer(0.1))
 
 		pool2_flat = tf.reshape(pool2, [-1, 7*7*64])
-		fc1 = tf.nn.relu(tf.matmul(pool2_flat, weights) + fc1_biases)
+		fc1 = tf.nn.relu(tf.matmul(pool2_flat, fc1_weights) + fc1_biases)
 		if train:
 			fc1 = tf.nn.dropout(fc1, 0.5)
 		
 	with tf.variable_scope('layer6-fc2'):
 
-		fc2_weights = weight_variable([1024, 10])
-		fc2_biases = bias_variable([10])
+		fc2_weights = get_weight_variable([1024, 10])
+		fc2_biases = tf.get_variable(
+			"biases", [10],
+			initializer = tf.constant_initializer(0.1))
+
 
 		y_conv = tf.matmul(fc1, fc2_weights) + fc2_biases
 	return y_conv
