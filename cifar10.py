@@ -9,7 +9,7 @@ CIFAR_FILES = ['/tmp/cifar-10-batches-py/data_batch_1', '/tmp/cifar-10-batches-p
                 
 TEST_FILES = '/tmp/cifar-10-batches-py/test_batch'
  
-				
+			
 BATCH_SIZE = 50
 DATASET_SIZE = 50000
 
@@ -75,11 +75,25 @@ def cnn(x):
     W_fc2 = weight_variable([256, 10])
     b_fc2 = bias_variable([10])
 
+
+    h_pool2 = max_pool_2x2(h_conv2)
+    h_pool2_flat = tf.reshape(h_pool2, [-1, 8*8*64])
+
+    W_fc1 = weight_variable([8*8*64, 512])
+    b_fc1 = bias_variable([512])
+    h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
+
+    keep_prob = tf.placeholder(tf.float32)
+    h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
+
+    W_fc2 = weight_variable([512, 10])
+    b_fc2 = bias_variable([10])
+
+
     y_conv = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
     return y_conv, keep_prob
     
-def main():
-    
+def main(): 
     #train_set = []
     dataset = unpickle(CIFAR_FILES[0])
     train_set = dataset[b'data']
@@ -127,12 +141,12 @@ def main():
     cross_entropy = tf.reduce_mean(
         tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y_conv))
     train_step = tf.train.AdamOptimizer(0.001).minimize(cross_entropy)
+
     correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
     #correct =  tf.nn.in_top_k(y_conv, y_, 1)
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
     
     steps = 100001
-    
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         for i in range(steps):
@@ -147,11 +161,12 @@ def main():
                 train_accuracy = accuracy.eval(feed_dict={
                     x:train_set_array[t_start:t_end], y_:labels[t_start:t_end], keep_prob: 1.0})
                 #print('y_conv=', sess.run(y_conv, feed_dict={x:train_set_array[t_start:t_end],  keep_prob: 1.0}))
+
                 #print('argmax=', sess.run(tf.argmax(y_conv,1), feed_dict={x:train_set[t_start:t_end],  keep_prob: 1.0}))    
                 #print('labels[]=', labels[t_start:t_end])
                 print("after %d steps, train accuracy: %g" % (i, train_accuracy))    
                 print('cross entropy=', sess.run(cross_entropy, feed_dict={x:train_set_array[t_start:t_end], y_:labels[t_start:t_end], keep_prob: 1.0}))
-                
+
                 #run test data every 5000 steps
                 if i>0 and i % 5000 == 0:
                     test_accuracy = accuracy.eval(feed_dict={
@@ -163,7 +178,5 @@ def main():
                     print("|                                             |")
                     print("|                                             |")
                     print("-----------------------------------------------")
-    
-
 if __name__ == '__main__':
     main()
