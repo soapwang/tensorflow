@@ -2,13 +2,15 @@ import tensorflow as tf
 import pickle
 import random
 import numpy as np
+import os
 
 CIFAR_FILES = ['/tmp/cifar-10-batches-py/data_batch_1', '/tmp/cifar-10-batches-py/data_batch_2', 
                 '/tmp/cifar-10-batches-py/data_batch_3', '/tmp/cifar-10-batches-py/data_batch_4',
                 '/tmp/cifar-10-batches-py/data_batch_5']
                 
 TEST_FILES = '/tmp/cifar-10-batches-py/test_batch'
- 
+
+MODEL_PATH = './cifar10/'
 			
 BATCH_SIZE = 50
 DATASET_SIZE = 50000
@@ -95,11 +97,11 @@ def cnn(x):
     
 def main(): 
     #train_set = []
+    if not os.path.exists(MODEL_PATH):
+        os.mkdir(MODEL_PATH)
     dataset = unpickle(CIFAR_FILES[0])
     train_set = dataset[b'data']
     labels = get_labels(dataset[b'labels'])
-    print(type(train_set))
-    print(type(labels))
     
     for i in range(1,5):
         #a dict with 4 keys: b'labels', b'batch_label', b'data', b'filenames'
@@ -155,7 +157,7 @@ def main():
             sess.run(train_step, feed_dict={
                 x:train_set_array[start:end], y_:labels[start:end], keep_prob: 0.5})
             #print accuracy on the train_set
-            if i % 100 == 0: 
+            if i % 200 == 0: 
                 t_start =  random.randint(0,99) * BATCH_SIZE
                 t_end = t_start + BATCH_SIZE
                 train_accuracy = accuracy.eval(feed_dict={
@@ -165,7 +167,7 @@ def main():
                 #print('argmax=', sess.run(tf.argmax(y_conv,1), feed_dict={x:train_set[t_start:t_end],  keep_prob: 1.0}))    
                 #print('labels[]=', labels[t_start:t_end])
                 print("after %d steps, train accuracy: %g" % (i, train_accuracy))    
-                print('cross entropy=', sess.run(cross_entropy, feed_dict={x:train_set_array[t_start:t_end], y_:labels[t_start:t_end], keep_prob: 1.0}))
+                #print('cross entropy=', sess.run(cross_entropy, feed_dict={x:train_set_array[t_start:t_end], y_:labels[t_start:t_end], keep_prob: 1.0}))
 
                 #run test data every 5000 steps
                 if i>0 and i % 5000 == 0:
@@ -174,9 +176,11 @@ def main():
                     print("-----------------------------------------------")
                     print("|                                             |")
                     print("|                                             |")
-                    print("|------------ test accuracy: %g ------------|" % (test_accuracy))  
+                    print("|----------- test accuracy: %g -----------|" % (test_accuracy))  
                     print("|                                             |")
                     print("|                                             |")
                     print("-----------------------------------------------")
+                    saver = tf.train.Saver()
+                    saver.save(sess, MODEL_PATH+'cifar10_test', global_step=i)
 if __name__ == '__main__':
     main()
